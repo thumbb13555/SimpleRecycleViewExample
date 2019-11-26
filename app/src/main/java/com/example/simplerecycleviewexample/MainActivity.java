@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -12,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     String TAG = "mExample";
     RecyclerView mRecyclerView;
     MyListAdapter myListAdapter;
+    SwipeRefreshLayout swipeRefreshLayout;
     ArrayList<HashMap<String,String>> arrayList = new ArrayList<>();
 
     @Override
@@ -29,6 +32,27 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //製造資料
+        makeData();
+
+        //設置RecycleView
+        mRecyclerView = findViewById(R.id.recycleview);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+        myListAdapter = new MyListAdapter();
+        mRecyclerView.setAdapter(myListAdapter);
+        //下拉刷新
+        swipeRefreshLayout = findViewById(R.id.refreshLayout);
+        swipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.blue_RURI));
+        swipeRefreshLayout.setOnRefreshListener(()->{
+            arrayList.clear();
+            makeData();
+            myListAdapter.notifyDataSetChanged();
+            swipeRefreshLayout.setRefreshing(false);
+
+        });
+    }//onCreate
+
+    private void makeData() {
         for (int i = 0;i<30;i++){
             HashMap<String,String> hashMap = new HashMap<>();
             hashMap.put("Id","座號："+String.format("%02d",i+1));
@@ -40,19 +64,14 @@ public class MainActivity extends AppCompatActivity {
 
             arrayList.add(hashMap);
         }
-        //設置RecycleView
-        mRecyclerView = findViewById(R.id.recycleview);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
-        myListAdapter = new MyListAdapter();
-        mRecyclerView.setAdapter(myListAdapter);
-    }//onCreate
+    }
 
     private class MyListAdapter extends RecyclerView.Adapter<MyListAdapter.ViewHolder>{
 
 
         class ViewHolder extends RecyclerView.ViewHolder{
             private TextView tvId,tvSub1,tvSub2,tvAvg;
+            private View mView;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -60,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 tvSub1 = itemView.findViewById(R.id.textView_sub1);
                 tvSub2 = itemView.findViewById(R.id.textView_sub2);
                 tvAvg  = itemView.findViewById(R.id.textView_avg);
+                mView  = itemView;
             }
         }
         @NonNull
@@ -86,6 +106,11 @@ public class MainActivity extends AppCompatActivity {
             holder.tvSub1.setText(arrayList.get(position).get("Sub1"));
             holder.tvSub2.setText(arrayList.get(position).get("Sub2"));
             holder.tvAvg.setText(arrayList.get(position).get("Avg"));
+
+            holder.mView.setOnClickListener((v)->{
+                Toast.makeText(getBaseContext(),holder.tvAvg.getText(),Toast.LENGTH_SHORT).show();
+            });
+
         }
 
         @Override
